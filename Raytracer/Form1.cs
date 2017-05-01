@@ -96,6 +96,12 @@ namespace Raytracer
             this.y = y;
             this.z = z;
         }
+        public Vector3()
+        {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+        } 
 
         public static Vector3 operator +(Vector3 one, Vector3 other)
         {
