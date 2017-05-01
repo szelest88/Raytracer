@@ -109,6 +109,26 @@ namespace Raytracer
         {
             return ("" + x + ", " + y + ", " + z);
         }
+
+        public float length()
+        {
+            return (float)Math.Sqrt(x * x + y * y + z * z);
+        }
+        public static Vector3 operator * (Vector3 vec, float scalar)
+        {
+            return new Vector3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
+        }
+        public Vector3 normalized()
+        {
+            float len = length();
+            return new Vector3(x / len, y / len, z / len);
+        }
+
+        public float dot(Vector3 vec1, Vector3 vec2)
+        {
+            return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
+        }
+
     }
 
     public class Sphere
