@@ -48,12 +48,45 @@ namespace Raytracer
             this.y = y;
             this.z = z;
         }
+
+        public static Vector3 operator +(Vector3 one, Vector3 other)
+        {
+            return new Vector3(one.x + other.x, one.y+ other.y, one.z + other.z);
+        }
+        public static Vector3 operator -(Vector3 one, Vector3 other)
+        {
+            return new Vector3(one.x - other.x, one.y - other.y, one.z - other.z);
+        }
+        public override String ToString()
+        {
+            return ("" + x + ", " + y + ", " + z);
+        }
     }
 
     public class Sphere
     {
         public Vector3 center;
         public float radius;
+
+        public bool intersects(Ray ray)
+        {
+            float x0 = ray.begin.x; float y0 = ray.begin.y; float z0 = ray.begin.z;
+            float xv = ray.direction.x; float yv = ray.direction.y; float zv = ray.direction.z;
+            float xc = center.x; float yc = center.y; float zc = center.z;
+            float R = radius;
+
+            float a = xv * xv + yv * yv + zv * zv;
+            float b = 2 * (x0*xv-xc*xv+y0*yv-yv*yc+z0*zv-zv*zc);
+            float c = x0 * x0 + xc * xc + y0 * y0 + yc * yc + z0 * z0 + zc * zc - 2*(z0 * zc + y0 * yc + z0 * zc) - R * R;
+
+            float delta = b * b - 4 * a * c;
+
+            if (delta >= 0)
+                return true;
+           
+            return false;
+
+        }
     }
 
     public class Ray
