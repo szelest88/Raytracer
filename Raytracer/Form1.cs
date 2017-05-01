@@ -34,7 +34,7 @@ namespace Raytracer
                 radius = 0.2f
             };
 
-            PointLight pointLight = new PointLight(new Vector3(-10, -10, -10), new Vector3(1, 1, 1));
+            PointLight pointLight = new PointLight(new Vector3(-10, -10, 10), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),800,800);
 
@@ -51,7 +51,7 @@ namespace Raytracer
                     {
                         Vector3 resultColor = new Vector3();
                         resultColor += new Vector3(0.2f, 0.2f, 0.2f); // "ambient"
-                        resultColor += new Vector3(1,1,1)*(s1.calculateNormal(intersection).dot(intersection - pointLight.position));
+                        resultColor += new Vector3(0.1f,0.1f,0.1f)*(s1.calculateNormal(intersection).dot(intersection - pointLight.position)); // diffuse
                         if (resultColor.x < 0)
                             resultColor.x = 0;
                         if (resultColor.y < 0)
