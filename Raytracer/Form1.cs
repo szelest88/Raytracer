@@ -46,9 +46,17 @@ namespace Raytracer
                         2.0f / (float)(cam.yRes) * (float)j);
 
                     Ray r = new Ray(cam.position, targetPoint - cam.position);
-                    if (s1.intersects(r)!=null)
+                    Vector3 intersection = s1.intersects(r);
+                    if (intersection!=null)
                     {
-                        bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, Color.Red);
+                        Vector3 resultColor = new Vector3();
+                        resultColor = resultColor + new Vector3(0.1f, 0.1f, 0.1f); // "ambient"
+                        bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, 
+                            Color.FromArgb(
+                                (int)(resultColor.x * 255.0f),
+                                (int)(resultColor.y * 255.0f),
+                                (int)(resultColor.z * 255.0f)                           
+                            ));
                     }
 
                 }
