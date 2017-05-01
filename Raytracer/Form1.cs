@@ -34,6 +34,8 @@ namespace Raytracer
                 radius = 0.2f
             };
 
+            PointLight pointLight = new PointLight(new Vector3(-10, -10, -10), new Vector3(1, 1, 1));
+
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),800,800);
 
             for(int i=-cam.xRes/2;i<cam.xRes/2;i++)
@@ -53,6 +55,16 @@ namespace Raytracer
         }
     }
 
+    public class PointLight
+    {
+        public Vector3 position;
+        public Vector3 color;
+        public PointLight(Vector3 position, Vector3 color)
+        {
+            this.position = position;
+            this.color = color;
+        }
+    }
     public class Camera
     {
         public Vector3 position;
