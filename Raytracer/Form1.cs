@@ -50,7 +50,21 @@ namespace Raytracer
                     if (intersection!=null)
                     {
                         Vector3 resultColor = new Vector3();
-                        resultColor = resultColor + new Vector3(0.1f, 0.1f, 0.1f); // "ambient"
+                        resultColor += new Vector3(0.2f, 0.2f, 0.2f); // "ambient"
+                        resultColor += new Vector3(1,1,1)*(s1.calculateNormal(intersection).dot(intersection - pointLight.position));
+                        if (resultColor.x < 0)
+                            resultColor.x = 0;
+                        if (resultColor.y < 0)
+                            resultColor.y = 0;
+                        if (resultColor.z < 0)
+                            resultColor.z = 0;
+                        if (resultColor.x > 1)
+                            resultColor.x = 1;
+                        if (resultColor.y > 1)
+                            resultColor.y = 1;
+                        if (resultColor.z > 1)
+                            resultColor.z = 1;
+                        
                         bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, 
                             Color.FromArgb(
                                 (int)(resultColor.x * 255.0f),
@@ -150,9 +164,9 @@ namespace Raytracer
             return new Vector3(x / len, y / len, z / len);
         }
 
-        public float dot(Vector3 vec1, Vector3 vec2)
+        public float dot(Vector3 vec2)
         {
-            return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
+            return x * vec2.x + y * vec2.y + z * vec2.z;
         }
 
     }
@@ -162,6 +176,12 @@ namespace Raytracer
         public Vector3 center;
         public float radius;
           
+        public Vector3 calculateNormal(Vector3 point)
+        {
+            Vector3 res = new Vector3();
+            res = (point - center).normalized();
+            return res;
+        }
         public Vector3 intersects(Ray ray)
         {
             float x0 = ray.begin.x; float y0 = ray.begin.y; float z0 = ray.begin.z;
