@@ -34,8 +34,56 @@ namespace Raytracer
                 radius = 0.2f
             };
 
-            Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
+            Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),800,800);
 
+            for(int i=-cam.xRes/2;i<cam.xRes/2;i++)
+                for(int j = -cam.yRes/2; j < cam.yRes/2; j++)
+                {
+                    Vector3 targetPoint = cam.getPointFromCenter(
+                        2.0f / (float)(cam.xRes) * (float)i,
+                        2.0f / (float)(cam.yRes) * (float)j);
+
+                    Ray r = new Ray(cam.position, targetPoint - cam.position);
+                    if (s1.intersects(r))
+                    {
+                        bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, Color.Red);
+                    }
+
+                }
+        }
+    }
+
+    public class Camera
+    {
+        public Vector3 position;
+        public Vector3 direction;
+        public Vector3 up;
+        public int xRes, yRes;
+
+        public Camera(Vector3 position, Vector3 direction, Vector3 up, int xRes, int yRes)
+        {
+            this.position = position;
+            this.direction = direction;
+            this.up = up;
+            this.xRes = xRes;
+            this.yRes = yRes;
+        }
+
+        public Vector3 getFirstPoint() // returns the origin translated by 1,dir,up
+        {
+            return position + direction + up + new Vector3(1, 0, 0);
+        }
+
+        public Vector3 getPoint(float x, float y) // returns the first point translated by x,y
+        {
+            Vector3 firstPoint = getFirstPoint();
+            return firstPoint + new Vector3((float)x, (float)y, 0);
+        }
+
+        public Vector3 getPointFromCenter(float x, float y) // returns the lookAt point translated by x,y
+        {
+            Vector3 firstPoint = position + direction;
+            return firstPoint + new Vector3((float)x, (float)y, 0);
         }
     }
 
@@ -91,8 +139,8 @@ namespace Raytracer
 
     public class Ray
     {
-        Vector3 begin;
-        Vector3 direction;
+        public Vector3 begin;
+        public Vector3 direction;
 
         public Ray(Vector3 begin, Vector3 direction)
         {
@@ -101,18 +149,5 @@ namespace Raytracer
         }
     }
 
-    public class Camera
-    {
-        public Vector3 position;
-        public Vector3 direction;
-        public Vector3 up;
 
-        public Camera(Vector3 position, Vector3 direction, Vector3 up)
-        {
-            this.position = position;
-            this.direction = direction;
-            this.up = up;
-        }
-
-    }
 }
