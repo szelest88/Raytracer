@@ -44,7 +44,7 @@ namespace Raytracer
                         2.0f / (float)(cam.yRes) * (float)j);
 
                     Ray r = new Ray(cam.position, targetPoint - cam.position);
-                    if (s1.intersects(r))
+                    if (s1.intersects(r)!=null)
                     {
                         bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, Color.Red);
                     }
@@ -135,10 +135,11 @@ namespace Raytracer
     {
         public Vector3 center;
         public float radius;
-
-        public bool intersects(Ray ray)
+          
+        public Vector3 intersects(Ray ray)
         {
             float x0 = ray.begin.x; float y0 = ray.begin.y; float z0 = ray.begin.z;
+            Vector3 dirNormalized = ray.direction.normalized();
             float xv = ray.direction.x; float yv = ray.direction.y; float zv = ray.direction.z;
             float xc = center.x; float yc = center.y; float zc = center.z;
             float R = radius;
@@ -149,10 +150,25 @@ namespace Raytracer
 
             float delta = b * b - 4 * a * c;
 
-            if (delta >= 0)
-                return true;
-           
-            return false;
+            if (delta == 0)
+            {
+                float t = -b / (2 * a);
+                return new Vector3(x0 + t * xv, y0 + t * yv, z0 + t * zv);
+            }
+            if (delta > 0)
+            {
+                // roboczo: zwrócić ten bliższy emiterowi promienia
+                float sqrt_delta = (float)Math.Sqrt(delta);
+                float t1 = (-b + sqrt_delta) / (2 * a);
+                float t2 = (-b - sqrt_delta) / (2 * a);
+                if (t1 < t2) // ????
+                    return new Vector3(x0 + t1 * xv, y0 + t1 * yv, z0 + t1 * zv);
+                else
+                    return new Vector3(x0 + t2 * xv, y0 + t2 * yv, z0 + t2 * zv);
+            }
+            else //delta <0
+                return null;
+
 
         }
     }
