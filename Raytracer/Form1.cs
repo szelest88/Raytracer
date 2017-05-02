@@ -19,12 +19,12 @@ namespace Raytracer
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        void render()
         {
             Bitmap bmp = new Bitmap(800, 800);
-            for(int i=0;i<800;i++)
-                for(int j=0;j<800;j++)
-            bmp.SetPixel(i,j, Color.LightYellow);
+            for (int i = 0; i < 800; i++)
+                for (int j = 0; j < 800; j++)
+                    bmp.SetPixel(i, j, Color.LightYellow);
             pictureBox1.Image = bmp;
 
             // let's say... kamera w 0,0,0, patrzy na 0,0,1
@@ -42,14 +42,14 @@ namespace Raytracer
             };
             List<Sphere> spheres = new List<Sphere>();
             spheres.Add(s1);
-         //   spheres.Add(s2);
+            //   spheres.Add(s2);
 
             PointLight pointLight = new PointLight(new Vector3(5, 40, 10), new Vector3(1, 1, 1));
 
-            Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),800,800);
+            Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), 800, 800);
 
-            for(int i=-cam.xRes/2;i<cam.xRes/2;i++)
-                for(int j = -cam.yRes/2; j < cam.yRes/2; j++)
+            for (int i = -cam.xRes / 2; i < cam.xRes / 2; i++)
+                for (int j = -cam.yRes / 2; j < cam.yRes / 2; j++)
                 {
                     Vector3 targetPoint = cam.getPointFromCenter(
                         2.0f / (float)(cam.xRes) * (float)i,
@@ -102,9 +102,23 @@ namespace Raytracer
                 }
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            render();
+        }
+
         private void pictureBox1_Click(object sender, EventArgs e)
         {
+        }
 
+        private void renderButton_Click(object sender, EventArgs e)
+        {
+            render();
+        }
+
+        private void renderAntialiased_Click(object sender, EventArgs e)
+        {
+            render();
         }
     }
 

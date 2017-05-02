@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.renderButton = new System.Windows.Forms.Button();
+            this.renderAntialiased = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -41,11 +43,33 @@
             this.pictureBox1.TabStop = false;
             this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             // 
+            // renderButton
+            // 
+            this.renderButton.Location = new System.Drawing.Point(1011, 203);
+            this.renderButton.Name = "renderButton";
+            this.renderButton.Size = new System.Drawing.Size(75, 23);
+            this.renderButton.TabIndex = 1;
+            this.renderButton.Text = "button1";
+            this.renderButton.UseVisualStyleBackColor = true;
+            this.renderButton.Click += new System.EventHandler(this.renderButton_Click);
+            // 
+            // renderAntialiased
+            // 
+            this.renderAntialiased.Location = new System.Drawing.Point(1011, 271);
+            this.renderAntialiased.Name = "renderAntialiased";
+            this.renderAntialiased.Size = new System.Drawing.Size(75, 23);
+            this.renderAntialiased.TabIndex = 2;
+            this.renderAntialiased.Text = "button1";
+            this.renderAntialiased.UseVisualStyleBackColor = true;
+            this.renderAntialiased.Click += new System.EventHandler(this.renderAntialiased_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1169, 919);
+            this.Controls.Add(this.renderAntialiased);
+            this.Controls.Add(this.renderButton);
             this.Controls.Add(this.pictureBox1);
             this.Name = "Form1";
             this.Text = "Form1";
@@ -58,6 +82,8 @@
         #endregion
 
         private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.Button renderButton;
+        private System.Windows.Forms.Button renderAntialiased;
     }
 }
 
