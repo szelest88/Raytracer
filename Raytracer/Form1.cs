@@ -19,7 +19,7 @@ namespace Raytracer
             InitializeComponent();
         }
 
-        void render(int resolution)
+        void Render(int resolution)
         {
             Bitmap bmp = new Bitmap(resolution, resolution);
             for (int i = 0; i < resolution; i++)
@@ -50,7 +50,7 @@ namespace Raytracer
             for (int i = -cam.xRes ; i < cam.xRes; i++)
                 for (int j = -cam.yRes; j < cam.yRes; j++)
                 {
-                    Vector3 targetPoint = cam.getPointFromCenter(
+                    Vector3 targetPoint = cam.GetPointFromCenter(
                         2f / (float)(cam.xRes) * (float)i,
                         2f / (float)(cam.yRes) * (float)j);
 
@@ -58,11 +58,11 @@ namespace Raytracer
                     Vector3 oneoneone = new Vector3(1, 1, 1);
                     foreach (Sphere sphere in spheres)
                     {
-                        Vector3 intersection = sphere.intersects(r);
+                        Vector3 intersection = sphere.Intersects(r);
                         if (intersection != null)
                         {
 
-                            Vector3 normal = s1.calculateNormal(intersection);
+                            Vector3 normal = s1.CalculateNormal(intersection);
                             Vector3 resultColor = new Vector3();
                             Vector3 intersection_minus_cam_pos = intersection - cam.position;
 
@@ -73,15 +73,15 @@ namespace Raytracer
 
                             Vector3 intersectionToPointLight = (intersection - pointLight.position);
                             resultColor += sphere.color * diffuseCoeff *
-                                (normal.dot(intersectionToPointLight.normalized())); // diffuse
+                                (normal.Dot(intersectionToPointLight.Normalized())); // diffuse
 
                             // specular:
-                            Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.dot(normal)) * (normal);
-                            reflectedVector = reflectedVector.normalized();
+                            Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.Dot(normal)) * (normal);
+                            reflectedVector = reflectedVector.Normalized();
 
                             resultColor += oneoneone * speculrCoeff *
                                 (float)Math.Pow(
-                                    reflectedVector.dot(intersection_minus_cam_pos.normalized())
+                                    reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
                                     , 10f);
 
                             if (resultColor.x < 0)
@@ -104,9 +104,9 @@ namespace Raytracer
                     
                 }
 
-            pictureBox1.Image = resolution==1600?downSampled(bmp):bmp;
+            pictureBox1.Image = resolution==1600?DownSampled(bmp):bmp;
         }
-        Bitmap downSampled(Bitmap bmp)
+        Bitmap DownSampled(Bitmap bmp)
         {
             Bitmap ret = new Bitmap(bmp.Width / 2, bmp.Height / 2);
 
@@ -132,25 +132,25 @@ namespace Raytracer
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-            render(800);
+            Render(800);
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
+        private void PictureBox1_Click(object sender, EventArgs e)
         {
         }
 
-        private void renderButton_Click(object sender, EventArgs e)
+        private void RenderButton_Click(object sender, EventArgs e)
         {
             double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
-            render(800);
+            Render(800);
             double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
             System.Console.WriteLine("" + (time1 - time0));
         }
 
-        private void renderAntialiased_Click(object sender, EventArgs e)
+        private void RenderAntialiased_Click(object sender, EventArgs e)
         {
             double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
-            render(1600);
+            Render(1600);
             double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
             System.Console.WriteLine("" +( time1-time0));
         }
@@ -182,18 +182,18 @@ namespace Raytracer
             this.yRes = yRes;
         }
 
-        public Vector3 getFirstPoint() // returns the origin translated by 1,dir,up
+        public Vector3 GetFirstPoint() // returns the origin translated by 1,dir,up
         {
             return position + direction + up + new Vector3(1, 0, 0);
         }
 
-        public Vector3 getPoint(float x, float y) // returns the first point translated by x,y
+        public Vector3 GetPoint(float x, float y) // returns the first point translated by x,y
         {
-            Vector3 firstPoint = getFirstPoint();
+            Vector3 firstPoint = GetFirstPoint();
             return firstPoint + new Vector3(x, y, 0);
         }
 
-        public Vector3 getPointFromCenter(float x, float y) // returns the lookAt point translated by x,y
+        public Vector3 GetPointFromCenter(float x, float y) // returns the lookAt point translated by x,y
         {
             Vector3 firstPoint = position + direction;
             return firstPoint + new Vector3(x, y, 0);
@@ -229,7 +229,7 @@ namespace Raytracer
             return ("" + x + ", " + y + ", " + z);
         }
 
-        public float length()
+        public float Length()
         {
             return (float)Math.Sqrt(x * x + y * y + z * z);
         }
@@ -241,18 +241,18 @@ namespace Raytracer
         {
             return new Vector3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
         }
-        public Vector3 normalized()
+        public Vector3 Normalized()
         {
-            float len = length();
+            float len = Length();
             return new Vector3(x / len, y / len, z / len);
         }
 
-        public float dot(Vector3 vec2)
+        public float Dot(Vector3 vec2)
         {
             return x * vec2.x + y * vec2.y + z * vec2.z;
         }
 
-    public Vector3 cross(Vector3 vec2)
+    public Vector3 Cross(Vector3 vec2)
     {
         return new Vector3(
             y*vec2.z-z*vec2.y,
@@ -268,16 +268,16 @@ namespace Raytracer
         public float radius;
 
         public Vector3 color;
-        public Vector3 calculateNormal(Vector3 point)
+        public Vector3 CalculateNormal(Vector3 point)
         {
             Vector3 res = new Vector3();
-            res = (point - center).normalized();
+            res = (point - center).Normalized();
             return res;
         }
-        public Vector3 intersects(Ray ray)
+        public Vector3 Intersects(Ray ray)
         {
             float x0 = ray.begin.x; float y0 = ray.begin.y; float z0 = ray.begin.z;
-            Vector3 dirNormalized = ray.direction.normalized();
+            Vector3 dirNormalized = ray.direction.Normalized();
             float xv = ray.direction.x; float yv = ray.direction.y; float zv = ray.direction.z;
             float xc = center.x; float yc = center.y; float zc = center.z;
             float R = radius;

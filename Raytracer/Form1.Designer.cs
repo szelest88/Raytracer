@@ -41,7 +41,7 @@
             this.pictureBox1.Size = new System.Drawing.Size(948, 831);
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
-            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
+            this.pictureBox1.Click += new System.EventHandler(this.PictureBox1_Click);
             // 
             // renderButton
             // 
@@ -51,7 +51,7 @@
             this.renderButton.TabIndex = 1;
             this.renderButton.Text = "button1";
             this.renderButton.UseVisualStyleBackColor = true;
-            this.renderButton.Click += new System.EventHandler(this.renderButton_Click);
+            this.renderButton.Click += new System.EventHandler(this.RenderButton_Click);
             // 
             // renderAntialiased
             // 
@@ -61,7 +61,7 @@
             this.renderAntialiased.TabIndex = 2;
             this.renderAntialiased.Text = "button1";
             this.renderAntialiased.UseVisualStyleBackColor = true;
-            this.renderAntialiased.Click += new System.EventHandler(this.renderAntialiased_Click);
+            this.renderAntialiased.Click += new System.EventHandler(this.RenderAntialiased_Click);
             // 
             // Form1
             // 
