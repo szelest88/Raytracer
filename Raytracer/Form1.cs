@@ -15,6 +15,11 @@ namespace Raytracer
 
     public partial class Form1 : Form
     {
+
+        float specular = 30;
+        int resolution = 800;
+        bool antialiasing = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -81,7 +86,7 @@ namespace Raytracer
                             resultColor += oneoneone * speculrCoeff *
                                 (float)Math.Pow(
                                     reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
-                                    , 40f);
+                                    , specular*2); // "*2" - ugly hack!
 
                             if (resultColor.x < 0)
                                 resultColor.x = 0;
@@ -143,7 +148,8 @@ namespace Raytracer
         }
         private void Form1_Load(object sender, EventArgs e)
         {
-            Render(800);
+            resolution = 800;
+            Render(resolution);
         }
 
         private void PictureBox1_Click(object sender, EventArgs e)
@@ -153,17 +159,22 @@ namespace Raytracer
         private void RenderButton_Click(object sender, EventArgs e)
         {
             double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
-            Render(800);
+            resolution = antialiasing?1600:800;
+            Render(resolution);
             double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
             System.Console.WriteLine("" + (time1 - time0));
         }
 
-        private void RenderAntialiased_Click(object sender, EventArgs e)
+
+        private void specularSetter_ValueChanged(object sender, EventArgs e)
         {
-            double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
-            Render(1600);
-            double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
-            System.Console.WriteLine("" +( time1-time0));
+            specular = (float)(specularSetter.Value);
+            Render(resolution);
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            antialiasing = checkBox1.Checked;
         }
     }
 
@@ -327,7 +338,7 @@ namespace Raytracer
                 float sqrt_delta = (float)Math.Sqrt(delta);
                 float t1 = (-b + sqrt_delta) / (2 * a);
                 float t2 = (-b - sqrt_delta) / (2 * a);
-                if (t1 > t2) // ????
+                if (t1 < t2) // this one seems correct (smaller is closer)
                     return new Vector3(x0 + t1 * xv, y0 + t1 * yv, z0 + t1 * zv);
                 else
                     return new Vector3(x0 + t2 * xv, y0 + t2 * yv, z0 + t2 * zv);
