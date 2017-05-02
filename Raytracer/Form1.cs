@@ -50,8 +50,11 @@ namespace Raytracer
                     if (intersection!=null)
                     {
                         Vector3 resultColor = new Vector3();
-                        resultColor += new Vector3(0.2f, 0.2f, 0.2f); // "ambient"
-                        resultColor += new Vector3(0.8f,0.1f,0.1f)*(s1.calculateNormal(intersection).dot((intersection - pointLight.position).normalized())); // diffuse
+
+                        float ambientCoeff = 0.1f;
+                        float diffuseCoeff = 0.9f;
+                        resultColor += new Vector3(1f, 1f, 1f)*ambientCoeff; // "ambient"
+                        resultColor += new Vector3(1f,0.1f,0.1f)*diffuseCoeff*(s1.calculateNormal(intersection).dot((intersection - pointLight.position).normalized())); // diffuse
                         if (resultColor.x < 0)
                             resultColor.x = 0;
                         if (resultColor.y < 0)
