@@ -24,23 +24,24 @@ namespace Raytracer
         {
             Bitmap bmp = new Bitmap(resolution, resolution,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
 
-
-            // let's say... kamera w 0,0,0, patrzy na 0,0,1
+            
             Sphere s1 = new Sphere() // VS hinted me this syntax... I didn't know it.
             {
                 center = new Vector3(0, 0, 1),
                 radius = 0.2f,
                 color = new Vector3(1, 0, 0)
             };
-            Sphere s2 = new Sphere() // VS hinted me this syntax... I didn't know it.
+            Sphere s2 = new Sphere()
             {
                 center = new Vector3(0.15f, 0.2f, 1.1f),
                 radius = 0.15f,
                 color = new Vector3(1, 0f, 1)
             };
+
             List<Sphere> spheres = new List<Sphere>();
+
             spheres.Add(s1);
-               spheres.Add(s2);
+            spheres.Add(s2);
 
             PointLight pointLight = new PointLight(new Vector3(5, 40, 10), new Vector3(1, 1, 1));
 
@@ -48,8 +49,8 @@ namespace Raytracer
 
             Vector3 oneoneone = new Vector3(1, 1, 1);
 
-            for (int i = -cam.xRes ; i < cam.xRes; i++)
-                for (int j = -cam.yRes; j < cam.yRes; j++)
+            for (int i = -cam.xRes/2 ; i < cam.xRes/2; i++)
+                for (int j = -cam.yRes/2; j < cam.yRes/2; j++)
                 {
                     Vector3 targetPoint = cam.GetPointFromCenter(
                         2f / (float)(cam.xRes) * (float)i,
@@ -68,7 +69,7 @@ namespace Raytracer
 
                             float ambientCoeff = 0.2f; float diffuseCoeff = 0.4f; float speculrCoeff = 0.4f;
 
-                            resultColor *= ambientCoeff; // initialized with 1,1,1
+                            resultColor *= ambientCoeff; // initialized with 1,1,1 => ambient
                             Vector3 intersectionToPointLight = (intersection - pointLight.position);
                             resultColor += sphere.color * diffuseCoeff *
                                 (normal.Dot(intersectionToPointLight.Normalized())); // diffuse
@@ -88,8 +89,7 @@ namespace Raytracer
                                 resultColor.y = 0;
                             if (resultColor.z < 0)
                                 resultColor.z = 0;
-
-
+                            
                             bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2,
                                 Color.FromArgb(
                                     (int)(resultColor.x * 255.0f),
@@ -197,7 +197,7 @@ namespace Raytracer
         {
             return position + direction + up*0.5f + new Vector3(0.5f, 0, 0);
         }
-
+        //FIXME: uglyyy
         public Vector3 GetPoint(float x, float y) // returns the first point translated by x,y
         {
             Vector3 firstPoint = GetFirstPoint();
@@ -278,7 +278,7 @@ namespace Raytracer
     }
     }
 
-
+    //TODO: implement
     public class Plane
     {
         public Vector3 center;
