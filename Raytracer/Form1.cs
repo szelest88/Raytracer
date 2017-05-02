@@ -31,10 +31,20 @@ namespace Raytracer
             Sphere s1 = new Sphere() // VS hinted me this syntax... I didn't know it.
             {
                 center = new Vector3(0, 0, 1),
-                radius = 0.2f
+                radius = 0.4f,
+                color = new Vector3(1, 0, 0)
             };
+            Sphere s2 = new Sphere() // VS hinted me this syntax... I didn't know it.
+            {
+                center = new Vector3(0.1f, 0.2f, 1),
+                radius = 0.15f,
+                color = new Vector3(1, 0f, 0)
+            };
+            List<Sphere> spheres = new List<Sphere>();
+            spheres.Add(s1);
+         //   spheres.Add(s2);
 
-            PointLight pointLight = new PointLight(new Vector3(0, 5, 5), new Vector3(1, 1, 1));
+            PointLight pointLight = new PointLight(new Vector3(5, 40, 10), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),800,800);
 
@@ -46,47 +56,55 @@ namespace Raytracer
                         2.0f / (float)(cam.yRes) * (float)j);
 
                     Ray r = new Ray(cam.position, targetPoint - cam.position);
-                    Vector3 intersection = s1.intersects(r);
-                    if (intersection!=null)
+                    foreach (Sphere sphere in spheres)
                     {
+                        Vector3 intersection = sphere.intersects(r);
+                        if (intersection != null)
+                        {
 
-                        Vector3 normal = s1.calculateNormal(intersection);
-                        Vector3 resultColor = new Vector3();
-                        Vector3 intersection_minus_cam_pos = intersection - cam.position;
+                            Vector3 normal = s1.calculateNormal(intersection);
+                            Vector3 resultColor = new Vector3();
+                            Vector3 intersection_minus_cam_pos = intersection - cam.position;
 
-                        float ambientCoeff = 0.2f;
-                        float diffuseCoeff = 0.4f;
-                        float speculrCoeff = 0.4f;
-                        resultColor += new Vector3(1f, 1f, 1f)*ambientCoeff; // "ambient"
-                        resultColor += new Vector3(1f,0.0f,0.0f)*diffuseCoeff*
-                            (normal.dot((intersection - pointLight.position).normalized())); // diffuse
+                            float ambientCoeff = 0.2f;
+                            float diffuseCoeff = 0.4f;
+                            float speculrCoeff = 0.4f;
+                            resultColor += new Vector3(1f, 1f, 1f) * ambientCoeff; // "ambient"
+                            resultColor += sphere.color * diffuseCoeff *
+                                (normal.dot((intersection - pointLight.position).normalized())); // diffuse
 
-                        // specular:
-                        Vector3 reflectedVector = (intersection-pointLight.position)-2*((intersection-pointLight.position).dot(normal))*(normal);
-                        reflectedVector = reflectedVector.normalized();
+                            // specular:
+                            Vector3 reflectedVector = (intersection - pointLight.position) - 2 * ((intersection - pointLight.position).dot(normal)) * (normal);
+                            reflectedVector = reflectedVector.normalized();
 
-                        resultColor += new Vector3(1f,1f,1f)*speculrCoeff*
-                            (float)Math.Pow(
-                                reflectedVector.dot(intersection_minus_cam_pos.normalized())
-                                ,10f);
+                            resultColor += new Vector3(1f, 1f, 1f) * speculrCoeff *
+                                (float)Math.Pow(
+                                    reflectedVector.dot(intersection_minus_cam_pos.normalized())
+                                    , 10f);
 
-                        if (resultColor.x < 0)
-                            resultColor.x = 0;
-                        if (resultColor.y < 0)
-                            resultColor.y = 0;
-                        if (resultColor.z < 0)
-                            resultColor.z = 0;
+                            if (resultColor.x < 0)
+                                resultColor.x = 0;
+                            if (resultColor.y < 0)
+                                resultColor.y = 0;
+                            if (resultColor.z < 0)
+                                resultColor.z = 0;
 
-                        
-                        bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, 
-                            Color.FromArgb(
-                                (int)(resultColor.x * 255.0f),
-                                (int)(resultColor.y * 255.0f),
-                                (int)(resultColor.z * 255.0f)                           
-                            ));
+
+                            bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2,
+                                Color.FromArgb(
+                                    (int)(resultColor.x * 255.0f),
+                                    (int)(resultColor.y * 255.0f),
+                                    (int)(resultColor.z * 255.0f)
+                                ));
+                        }
                     }
 
                 }
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 
@@ -200,7 +218,8 @@ namespace Raytracer
     {
         public Vector3 center;
         public float radius;
-          
+
+        public Vector3 color;
         public Vector3 calculateNormal(Vector3 point)
         {
             Vector3 res = new Vector3();
