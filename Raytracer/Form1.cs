@@ -58,12 +58,7 @@ namespace Raytracer
                             resultColor.y = 0;
                         if (resultColor.z < 0)
                             resultColor.z = 0;
-                        if (resultColor.x > 1)
-                            resultColor.x = 1;
-                        if (resultColor.y > 1)
-                            resultColor.y = 1;
-                        if (resultColor.z > 1)
-                            resultColor.z = 1;
+
                         
                         bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2, 
                             Color.FromArgb(
