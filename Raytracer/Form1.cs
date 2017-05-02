@@ -30,22 +30,24 @@ namespace Raytracer
             Sphere s1 = new Sphere() // VS hinted me this syntax... I didn't know it.
             {
                 center = new Vector3(0, 0, 1),
-                radius = 0.4f,
+                radius = 0.2f,
                 color = new Vector3(1, 0, 0)
             };
             Sphere s2 = new Sphere() // VS hinted me this syntax... I didn't know it.
             {
-                center = new Vector3(0.1f, 0.2f, 1),
+                center = new Vector3(0.15f, 0.2f, 1.1f),
                 radius = 0.15f,
-                color = new Vector3(1, 0f, 0)
+                color = new Vector3(1, 0f, 1)
             };
             List<Sphere> spheres = new List<Sphere>();
             spheres.Add(s1);
-            //   spheres.Add(s2);
+               spheres.Add(s2);
 
             PointLight pointLight = new PointLight(new Vector3(5, 40, 10), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), resolution, resolution);
+
+            Vector3 oneoneone = new Vector3(1, 1, 1);
 
             for (int i = -cam.xRes ; i < cam.xRes; i++)
                 for (int j = -cam.yRes; j < cam.yRes; j++)
@@ -55,7 +57,6 @@ namespace Raytracer
                         2f / (float)(cam.yRes) * (float)j);
 
                     Ray r = new Ray(cam.position, targetPoint - cam.position);
-                    Vector3 oneoneone = new Vector3(1, 1, 1);
                     foreach (Sphere sphere in spheres)
                     {
                         Vector3 intersection = sphere.Intersects(r);
@@ -63,14 +64,12 @@ namespace Raytracer
                         {
 
                             Vector3 normal = s1.CalculateNormal(intersection);
-                            Vector3 resultColor = new Vector3();
+                            Vector3 resultColor = oneoneone;
                             Vector3 intersection_minus_cam_pos = intersection - cam.position;
 
-                            float ambientCoeff = 0.2f;
-                            float diffuseCoeff = 0.4f;
-                            float speculrCoeff = 0.4f;
-                            resultColor += oneoneone * ambientCoeff; // "ambient"
+                            float ambientCoeff = 0.2f; float diffuseCoeff = 0.4f; float speculrCoeff = 0.4f;
 
+                            resultColor *= ambientCoeff; // initialized with 1,1,1
                             Vector3 intersectionToPointLight = (intersection - pointLight.position);
                             resultColor += sphere.color * diffuseCoeff *
                                 (normal.Dot(intersectionToPointLight.Normalized())); // diffuse
@@ -82,7 +81,7 @@ namespace Raytracer
                             resultColor += oneoneone * speculrCoeff *
                                 (float)Math.Pow(
                                     reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
-                                    , 10f);
+                                    , 40f);
 
                             if (resultColor.x < 0)
                                 resultColor.x = 0;
@@ -184,19 +183,24 @@ namespace Raytracer
 
         public Vector3 GetFirstPoint() // returns the origin translated by 1,dir,up
         {
-            return position + direction + up + new Vector3(1, 0, 0);
+            return position + direction + up*0.5f + new Vector3(0.5f, 0, 0);
         }
 
         public Vector3 GetPoint(float x, float y) // returns the first point translated by x,y
         {
             Vector3 firstPoint = GetFirstPoint();
-            return firstPoint + new Vector3(x, y, 0);
+            firstPoint.x += x;
+            firstPoint.y += y;
+            return firstPoint;
         }
 
         public Vector3 GetPointFromCenter(float x, float y) // returns the lookAt point translated by x,y
         {
             Vector3 firstPoint = position + direction;
-            return firstPoint + new Vector3(x, y, 0);
+            firstPoint.x += x / 2.0f;
+            firstPoint.y += y / 2.0f;
+
+            return firstPoint;
         }
     }
 
@@ -262,6 +266,20 @@ namespace Raytracer
     }
     }
 
+
+    public class Plane
+    {
+        public Vector3 center;
+        public Vector3 normal;
+
+        public Vector3 Intersects(Ray ray)
+        {
+            Vector3 v = new Vector3();
+
+            return v;
+
+        }
+    }
     public class Sphere
     {
         public Vector3 center;
@@ -270,21 +288,19 @@ namespace Raytracer
         public Vector3 color;
         public Vector3 CalculateNormal(Vector3 point)
         {
-            Vector3 res = new Vector3();
-            res = (point - center).Normalized();
-            return res;
+            return (point - center).Normalized();
+            
         }
         public Vector3 Intersects(Ray ray)
         {
             float x0 = ray.begin.x; float y0 = ray.begin.y; float z0 = ray.begin.z;
-            Vector3 dirNormalized = ray.direction.Normalized();
             float xv = ray.direction.x; float yv = ray.direction.y; float zv = ray.direction.z;
             float xc = center.x; float yc = center.y; float zc = center.z;
             float R = radius;
 
             float a = xv * xv + yv * yv + zv * zv;
-            float b = 2 * (x0*xv-xc*xv+y0*yv-yv*yc+z0*zv-zv*zc);
-            float c = x0 * x0 + xc * xc + y0 * y0 + yc * yc + z0 * z0 + zc * zc - 2*(z0 * zc + y0 * yc + z0 * zc) - R * R;
+            float b = 2 * ( xv*(x0-xc) + yv*(y0-yc) + zv*(z0-zc));
+            float c = x0 * x0 + xc * xc + y0 * y0 + yc * yc + z0 * z0 + zc * zc - 2*(x0 * xc + y0 * yc + z0 * zc) - R * R;
 
             float delta = b * b - 4 * a * c;
 
