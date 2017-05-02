@@ -19,13 +19,12 @@ namespace Raytracer
             InitializeComponent();
         }
 
-        void render()
+        void render(int resolution)
         {
-            Bitmap bmp = new Bitmap(800, 800);
-            for (int i = 0; i < 800; i++)
-                for (int j = 0; j < 800; j++)
+            Bitmap bmp = new Bitmap(resolution, resolution);
+            for (int i = 0; i < resolution; i++)
+                for (int j = 0; j < resolution; j++)
                     bmp.SetPixel(i, j, Color.LightYellow);
-            pictureBox1.Image = bmp;
 
             // let's say... kamera w 0,0,0, patrzy na 0,0,1
             Sphere s1 = new Sphere() // VS hinted me this syntax... I didn't know it.
@@ -46,16 +45,17 @@ namespace Raytracer
 
             PointLight pointLight = new PointLight(new Vector3(5, 40, 10), new Vector3(1, 1, 1));
 
-            Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), 800, 800);
+            Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), resolution, resolution);
 
-            for (int i = -cam.xRes / 2; i < cam.xRes / 2; i++)
-                for (int j = -cam.yRes / 2; j < cam.yRes / 2; j++)
+            for (int i = -cam.xRes ; i < cam.xRes; i++)
+                for (int j = -cam.yRes; j < cam.yRes; j++)
                 {
                     Vector3 targetPoint = cam.getPointFromCenter(
-                        2.0f / (float)(cam.xRes) * (float)i,
-                        2.0f / (float)(cam.yRes) * (float)j);
+                        2f / (float)(cam.xRes) * (float)i,
+                        2f / (float)(cam.yRes) * (float)j);
 
                     Ray r = new Ray(cam.position, targetPoint - cam.position);
+                    Vector3 oneoneone = new Vector3(1, 1, 1);
                     foreach (Sphere sphere in spheres)
                     {
                         Vector3 intersection = sphere.intersects(r);
@@ -69,15 +69,17 @@ namespace Raytracer
                             float ambientCoeff = 0.2f;
                             float diffuseCoeff = 0.4f;
                             float speculrCoeff = 0.4f;
-                            resultColor += new Vector3(1f, 1f, 1f) * ambientCoeff; // "ambient"
+                            resultColor += oneoneone * ambientCoeff; // "ambient"
+
+                            Vector3 intersectionToPointLight = (intersection - pointLight.position);
                             resultColor += sphere.color * diffuseCoeff *
-                                (normal.dot((intersection - pointLight.position).normalized())); // diffuse
+                                (normal.dot(intersectionToPointLight.normalized())); // diffuse
 
                             // specular:
-                            Vector3 reflectedVector = (intersection - pointLight.position) - 2 * ((intersection - pointLight.position).dot(normal)) * (normal);
+                            Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.dot(normal)) * (normal);
                             reflectedVector = reflectedVector.normalized();
 
-                            resultColor += new Vector3(1f, 1f, 1f) * speculrCoeff *
+                            resultColor += oneoneone * speculrCoeff *
                                 (float)Math.Pow(
                                     reflectedVector.dot(intersection_minus_cam_pos.normalized())
                                     , 10f);
@@ -99,12 +101,38 @@ namespace Raytracer
                         }
                     }
 
+                    
                 }
-        }
 
+            pictureBox1.Image = resolution==1600?downSampled(bmp):bmp;
+        }
+        Bitmap downSampled(Bitmap bmp)
+        {
+            Bitmap ret = new Bitmap(bmp.Width / 2, bmp.Height / 2);
+
+            for (int i = 0; i < bmp.Width; i++)
+                for (int j = 0; j < bmp.Height; j++) {
+                    if (i % 2 == 1 && j % 2 == 1) {
+                        
+                        Color c00 = bmp.GetPixel(i, j);
+                        Color c10 = bmp.GetPixel(i-1, j);
+                        Color c01 = bmp.GetPixel(i, j-1);
+                        Color c11 = bmp.GetPixel(i-1, j-1);
+
+                        Color res = Color.FromArgb(
+                            ((int)c00.R + (int)c01.R + (int)c10.R + (int)c11.R) / 4,
+                            ((int)c00.G + (int)c01.G + (int)c10.G + (int)c11.G) / 4,
+                            ((int)c00.B + (int)c01.B + (int)c10.B + (int)c11.B) / 4);
+
+                        ret.SetPixel((i-1) / 2, (j-1) / 2,res);
+                            }
+                }
+
+            return ret;
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
-            render();
+            render(800);
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
@@ -113,12 +141,18 @@ namespace Raytracer
 
         private void renderButton_Click(object sender, EventArgs e)
         {
-            render();
+            double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            render(800);
+            double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            System.Console.WriteLine("" + (time1 - time0));
         }
 
         private void renderAntialiased_Click(object sender, EventArgs e)
         {
-            render();
+            double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            render(1600);
+            double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            System.Console.WriteLine("" +( time1-time0));
         }
     }
 
@@ -156,13 +190,13 @@ namespace Raytracer
         public Vector3 getPoint(float x, float y) // returns the first point translated by x,y
         {
             Vector3 firstPoint = getFirstPoint();
-            return firstPoint + new Vector3((float)x, (float)y, 0);
+            return firstPoint + new Vector3(x, y, 0);
         }
 
         public Vector3 getPointFromCenter(float x, float y) // returns the lookAt point translated by x,y
         {
             Vector3 firstPoint = position + direction;
-            return firstPoint + new Vector3((float)x, (float)y, 0);
+            return firstPoint + new Vector3(x, y, 0);
         }
     }
 
@@ -265,7 +299,7 @@ namespace Raytracer
                 float sqrt_delta = (float)Math.Sqrt(delta);
                 float t1 = (-b + sqrt_delta) / (2 * a);
                 float t2 = (-b - sqrt_delta) / (2 * a);
-                if (t1 < t2) // ????
+                if (t1 > t2) // ????
                     return new Vector3(x0 + t1 * xv, y0 + t1 * yv, z0 + t1 * zv);
                 else
                     return new Vector3(x0 + t2 * xv, y0 + t2 * yv, z0 + t2 * zv);
