@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,10 +22,8 @@ namespace Raytracer
 
         void Render(int resolution)
         {
-            Bitmap bmp = new Bitmap(resolution, resolution);
-            for (int i = 0; i < resolution; i++)
-                for (int j = 0; j < resolution; j++)
-                    bmp.SetPixel(i, j, Color.LightYellow);
+            Bitmap bmp = new Bitmap(resolution, resolution,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+
 
             // let's say... kamera w 0,0,0, patrzy na 0,0,1
             Sphere s1 = new Sphere() // VS hinted me this syntax... I didn't know it.
@@ -105,27 +104,40 @@ namespace Raytracer
 
             pictureBox1.Image = resolution==1600?DownSampled(bmp):bmp;
         }
-        Bitmap DownSampled(Bitmap bmp)
+        unsafe Bitmap DownSampled(Bitmap bmp)
         {
-            Bitmap ret = new Bitmap(bmp.Width / 2, bmp.Height / 2);
+            Bitmap ret = new Bitmap(bmp.Width/2, bmp.Height/2, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+            BitmapData data = ret.LockBits(new Rectangle(0,0,ret.Width,ret.Height),ImageLockMode.ReadWrite,PixelFormat.Format24bppRgb);
+            IntPtr begin = data.Scan0;
+            int bytes = Math.Abs(data.Stride) * ret.Height;
+            byte[] rgbValues = new byte[bytes];
 
+            // Copy the RGB values into the array.
+            System.Runtime.InteropServices.Marshal.Copy(begin, rgbValues, 0, bytes);
+            int count = 0;
             for (int i = 0; i < bmp.Width; i++)
                 for (int j = 0; j < bmp.Height; j++) {
                     if (i % 2 == 1 && j % 2 == 1) {
                         
-                        Color c00 = bmp.GetPixel(i, j);
-                        Color c10 = bmp.GetPixel(i-1, j);
-                        Color c01 = bmp.GetPixel(i, j-1);
-                        Color c11 = bmp.GetPixel(i-1, j-1);
+                        Color c00 = bmp.GetPixel(j, i);
+                        Color c10 = bmp.GetPixel(j-1, i);
+                        Color c01 = bmp.GetPixel(j, i-1);
+                        Color c11 = bmp.GetPixel(j-1, i-1);
 
                         Color res = Color.FromArgb(
                             ((int)c00.R + (int)c01.R + (int)c10.R + (int)c11.R) / 4,
                             ((int)c00.G + (int)c01.G + (int)c10.G + (int)c11.G) / 4,
                             ((int)c00.B + (int)c01.B + (int)c10.B + (int)c11.B) / 4);
-
-                        ret.SetPixel((i-1) / 2, (j-1) / 2,res);
-                            }
+                        
+                        rgbValues[count] = res.B;
+                        rgbValues[count+1] = res.G;
+                        rgbValues[count+2] = res.R;
+                        count += 3;
+                    }
                 }
+
+            System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, begin, bytes);
+            ret.UnlockBits(data);
 
             return ret;
         }
