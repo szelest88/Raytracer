@@ -24,7 +24,7 @@ namespace Raytracer
             Bitmap bmp = new Bitmap(800, 800);
             for(int i=0;i<800;i++)
                 for(int j=0;j<800;j++)
-            bmp.SetPixel(i,j, Color.DarkGray);
+            bmp.SetPixel(i,j, Color.LightYellow);
             pictureBox1.Image = bmp;
 
             // let's say... kamera w 0,0,0, patrzy na 0,0,1
@@ -34,7 +34,7 @@ namespace Raytracer
                 radius = 0.2f
             };
 
-            PointLight pointLight = new PointLight(new Vector3(1, 5, 5), new Vector3(1, 1, 1));
+            PointLight pointLight = new PointLight(new Vector3(0, 5, 5), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0),800,800);
 
@@ -49,12 +49,27 @@ namespace Raytracer
                     Vector3 intersection = s1.intersects(r);
                     if (intersection!=null)
                     {
-                        Vector3 resultColor = new Vector3();
 
-                        float ambientCoeff = 0.1f;
-                        float diffuseCoeff = 0.9f;
+                        Vector3 normal = s1.calculateNormal(intersection);
+                        Vector3 resultColor = new Vector3();
+                        Vector3 intersection_minus_cam_pos = intersection - cam.position;
+
+                        float ambientCoeff = 0.2f;
+                        float diffuseCoeff = 0.4f;
+                        float speculrCoeff = 0.4f;
                         resultColor += new Vector3(1f, 1f, 1f)*ambientCoeff; // "ambient"
-                        resultColor += new Vector3(1f,0.1f,0.1f)*diffuseCoeff*(s1.calculateNormal(intersection).dot((intersection - pointLight.position).normalized())); // diffuse
+                        resultColor += new Vector3(1f,0.0f,0.0f)*diffuseCoeff*
+                            (normal.dot((intersection - pointLight.position).normalized())); // diffuse
+
+                        // specular:
+                        Vector3 reflectedVector = (intersection-pointLight.position)-2*((intersection-pointLight.position).dot(normal))*(normal);
+                        reflectedVector = reflectedVector.normalized();
+
+                        resultColor += new Vector3(1f,1f,1f)*speculrCoeff*
+                            (float)Math.Pow(
+                                reflectedVector.dot(intersection_minus_cam_pos.normalized())
+                                ,10f);
+
                         if (resultColor.x < 0)
                             resultColor.x = 0;
                         if (resultColor.y < 0)
@@ -156,6 +171,10 @@ namespace Raytracer
         {
             return new Vector3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
         }
+        public static Vector3 operator *(float scalar, Vector3 vec)
+        {
+            return new Vector3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
+        }
         public Vector3 normalized()
         {
             float len = length();
@@ -167,6 +186,14 @@ namespace Raytracer
             return x * vec2.x + y * vec2.y + z * vec2.z;
         }
 
+    public Vector3 cross(Vector3 vec2)
+    {
+        return new Vector3(
+            y*vec2.z-z*vec2.y,
+            z*vec2.x-x*vec2.z,
+            x*vec2.y-y*vec2.x
+            );
+    }
     }
 
     public class Sphere
