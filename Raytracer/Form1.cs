@@ -16,7 +16,7 @@ namespace Raytracer
     public partial class Form1 : Form
     {
 
-        float specular = 30;
+        float specular = 10;
         int resolution = 800;
         bool antialiasing = false;
 
@@ -27,32 +27,31 @@ namespace Raytracer
 
         void Render(int resolution)
         {
-            Bitmap bmp = new Bitmap(resolution, resolution,System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-
+            Bitmap bmp = new Bitmap(resolution, resolution, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
             
             Sphere s1 = new Sphere() // VS hinted me this syntax... I didn't know it.
             {
                 center = new Vector3(0, 0, 1),
-                radius = 0.2f,
+                radius = 0.15f,
                 color = new Vector3(1, 0, 0)
             };
             Sphere s2 = new Sphere()
             {
-                center = new Vector3(0.15f, 0.2f, 1.1f),
-                radius = 0.15f,
-                color = new Vector3(1, 0f, 1)
+                center = new Vector3(-0.1f, -0.08f, 0.9f),
+                radius = 0.06f,
+                color = new Vector3(0.0f, 1.0f, 0.4f)
             };
 
             List<Sphere> spheres = new List<Sphere>();
+           spheres.Add(s1);
+           // spheres.Add(s2);
+           // spheres.Add(s0);
 
-            spheres.Add(s1);
-            spheres.Add(s2);
-
-            PointLight pointLight = new PointLight(new Vector3(5, 40, 10), new Vector3(1, 1, 1));
+            PointLight pointLight = new PointLight(new Vector3(10.8f, 0.8f, 10), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), resolution, resolution);
 
-            Vector3 oneoneone = new Vector3(1, 1, 1);
+           // Vector3 oneoneone
 
             for (int i = -cam.xRes/2 ; i < cam.xRes/2; i++)
                 for (int j = -cam.yRes/2; j < cam.yRes/2; j++)
@@ -61,7 +60,7 @@ namespace Raytracer
                         2f / (float)(cam.xRes) * (float)i,
                         2f / (float)(cam.yRes) * (float)j);
 
-                    Ray r = new Ray(cam.position, targetPoint - cam.position);
+                    Ray r = new Ray(cam.position, (targetPoint - cam.position).Normalized());
                     foreach (Sphere sphere in spheres)
                     {
                         Vector3 intersection = sphere.Intersects(r);
@@ -69,24 +68,28 @@ namespace Raytracer
                         {
 
                             Vector3 normal = s1.CalculateNormal(intersection);
-                            Vector3 resultColor = oneoneone;
+                            Vector3 resultColor  = new Vector3(1, 1, 1);
                             Vector3 intersection_minus_cam_pos = intersection - cam.position;
 
-                            float ambientCoeff = 0.2f; float diffuseCoeff = 0.4f; float speculrCoeff = 0.4f;
+                            float ambientCoeff = 0.3f; float diffuseCoeff = 0.4f; float speculrCoeff = 0.3f;
 
                             resultColor *= ambientCoeff; // initialized with 1,1,1 => ambient
                             Vector3 intersectionToPointLight = (intersection - pointLight.position);
-                            resultColor += sphere.color * diffuseCoeff *
-                                (normal.Dot(intersectionToPointLight.Normalized())); // diffuse
+                            resultColor +=  sphere.color*diffuseCoeff
+                                *
+                                (normal.Dot(intersectionToPointLight.Normalized())); // diffuse, and this causes the sphere to turn green?
+                                                                                     //   System.Console.WriteLine("" + normal.Dot(intersectionToPointLight.Normalized()));
+                                                                                     // specular:
 
-                            // specular:
                             Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.Dot(normal)) * (normal);
-                            reflectedVector = reflectedVector.Normalized();
 
-                            resultColor += oneoneone * speculrCoeff *
+                            reflectedVector = reflectedVector.Normalized();
+                            if (normal.Dot(intersectionToPointLight.Normalized()) > 0) // haack
+
+                                resultColor += new Vector3(1,1,1) * speculrCoeff *
                                 (float)Math.Pow(
                                     reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
-                                    , specular*2); // "*2" - ugly hack!
+                                    , specular); // "*2" - ugly hack!
 
                             if (resultColor.x < 0)
                                 resultColor.x = 0;
@@ -94,7 +97,12 @@ namespace Raytracer
                                 resultColor.y = 0;
                             if (resultColor.z < 0)
                                 resultColor.z = 0;
-                            
+                            //if (resultColor.x > 1)
+                            //    resultColor.x = 1;
+                            //if (resultColor.y > 1)
+                            //    resultColor.y = 1;
+                            //if (resultColor.z > 1)
+                            //    resultColor.z = 1;
                             bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2,
                                 Color.FromArgb(
                                     (int)(resultColor.x * 255.0f),
@@ -168,8 +176,12 @@ namespace Raytracer
 
         private void specularSetter_ValueChanged(object sender, EventArgs e)
         {
+            double time0 = DateTime.Now.TimeOfDay.TotalMilliseconds;
             specular = (float)(specularSetter.Value);
             Render(resolution);
+
+            double time1 = DateTime.Now.TimeOfDay.TotalMilliseconds;
+            System.Console.WriteLine("" + (time1 - time0));
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
@@ -271,7 +283,7 @@ namespace Raytracer
         public Vector3 Normalized()
         {
             float len = Length();
-            return new Vector3(x / len, y / len, z / len);
+            return new Vector3(x, y, z)*(1.0f/len);
         }
 
         public float Dot(Vector3 vec2)
@@ -337,11 +349,18 @@ namespace Raytracer
                 // roboczo: zwrócić ten bliższy emiterowi promienia
                 float sqrt_delta = (float)Math.Sqrt(delta);
                 float t1 = (-b + sqrt_delta) / (2 * a);
-                float t2 = (-b - sqrt_delta) / (2 * a);
-                if (t1 < t2) // this one seems correct (smaller is closer)
-                    return new Vector3(x0 + t1 * xv, y0 + t1 * yv, z0 + t1 * zv);
-                else
-                    return new Vector3(x0 + t2 * xv, y0 + t2 * yv, z0 + t2 * zv);
+                float t0 = (-b - sqrt_delta) / (2 * a);
+
+                if(t0<0) // "smaller positive" (the same effect :| )
+                {
+                    if (t1 < 0)
+                        return null;
+                    else
+                        return new Vector3(x0 + t1 * xv, y0 + t1 * yv, z0 + t1 * zv);
+
+                }else
+
+                    return new Vector3(x0 + t0 * xv, y0 + t0 * yv, z0 + t0 * zv);
             }
             else //delta <0
                 return null;
