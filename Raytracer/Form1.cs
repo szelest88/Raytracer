@@ -15,7 +15,7 @@ namespace Raytracer
 
     public partial class Form1 : Form
     {
-
+        Sphere s3;
         float specular = 10;
         int resolution = 800;
         bool antialiasing = false;
@@ -23,6 +23,12 @@ namespace Raytracer
         public Form1()
         {
             InitializeComponent();
+            s3 = new Sphere()
+            {
+                center = new Vector3(0.2f, 0.1f, 0.7f),
+                radius = 0.06f,
+                color = new Vector3(1.0f, 0.0f, 0.2f)
+            };
         }
 
         void Render(int resolution)
@@ -33,21 +39,29 @@ namespace Raytracer
             {
                 center = new Vector3(0, 0, 1),
                 radius = 0.15f,
-                color = new Vector3(1, 0, 0)
+                color = new Vector3(0, 0, 0)
             };
             Sphere s2 = new Sphere()
             {
-                center = new Vector3(-0.1f, -0.08f, 0.9f),
+                center = new Vector3(-0.2f, 0.1f, 0.7f),
                 radius = 0.06f,
-                color = new Vector3(0.0f, 1.0f, 0.4f)
+                color = new Vector3(0.0f, 1.0f, 0.2f)
             };
+
+            s3.center.x-=0.2f;
+            s3.center.y -= 0.02f;
+            s3.center.z += 0.2f;
+            s1.isReflective = true;
+            s2.isReflective = false;
+            s3.isReflective = false;
 
             List<Sphere> spheres = new List<Sphere>();
            spheres.Add(s1);
-           // spheres.Add(s2);
-           // spheres.Add(s0);
+            spheres.Add(s2);
+            spheres.Add(s3);
 
-            PointLight pointLight = new PointLight(new Vector3(10.8f, 0.8f, 10), new Vector3(1, 1, 1));
+            PointLight pointLight = new PointLight(new Vector3(1.8f, -1.8f, +0.2f), new Vector3(1, 1, 1));
+            PointLight pointLight2 = new PointLight(new Vector3(1.3f, 3.8f, 40.2f), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), resolution, resolution);
 
@@ -71,38 +85,93 @@ namespace Raytracer
                             Vector3 resultColor  = new Vector3(1, 1, 1);
                             Vector3 intersection_minus_cam_pos = intersection - cam.position;
 
-                            float ambientCoeff = 0.3f; float diffuseCoeff = 0.4f; float speculrCoeff = 0.3f;
+                            float ambientCoeff = 0.2f; float diffuseCoeff = 0.2f; float speculrCoeff = 0.8f;
 
                             resultColor *= ambientCoeff; // initialized with 1,1,1 => ambient
-                            Vector3 intersectionToPointLight = (intersection - pointLight.position);
-                            resultColor +=  sphere.color*diffuseCoeff
-                                *
-                                (normal.Dot(intersectionToPointLight.Normalized())); // diffuse, and this causes the sphere to turn green?
-                                                                                     //   System.Console.WriteLine("" + normal.Dot(intersectionToPointLight.Normalized()));
-                                                                                     // specular:
+                            Vector3 intersectionToPointLight = (intersection - pointLight.position).Normalized();
+                            Vector3 intersectionToPointLight2 = (intersection - pointLight2.position).Normalized();
+
+                            Vector3 diff = new Vector3(0, 0, 0);
+                            if (!sphere.isReflective)
+                            {
+                                diff = sphere.color * diffuseCoeff
+                                   *
+                                   (normal.Dot(intersectionToPointLight.Normalized())); // diffuse, and this causes the sphere to turn green?
+                                                                                        //   System.Console.WriteLine("" + normal.Dot(intersectionToPointLight.Normalized()));
+                                                                                        // specular:
+                                diff+=0.5f*sphere.color* diffuseCoeff
+                                   *
+                                   (normal.Dot(intersectionToPointLight2.Normalized())); // diffuse, and this causes the sphere to turn green?
+                                                                                        //   System.Cons
+                            }
+                            else
+                            {
+                                speculrCoeff = 1f;
+                                Ray r2 = new Ray(intersection,
+                                    intersection_minus_cam_pos.Normalized() - 2 * (intersection_minus_cam_pos.Normalized().Dot(normal)) * (normal)
+                                    );
+                                foreach(Sphere sphere2 in spheres)
+                                {
+                                    if (sphere2.center != sphere.center)
+                                    {
+                                        Vector3 inters2 = sphere2.Intersects(r2);
+                                        if (inters2 != null)
+                                        {
+
+                                            diff = sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight.position).Normalized()));
+                                            resultColor.x *= diff.Normalized().x;
+                                            resultColor.y *= diff.Normalized().y;
+                                            resultColor.z *= diff.Normalized().z;
+                                            diff -=0.5f* sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight2.position).Normalized()));
+                                            resultColor.x *= diff.Normalized().x;
+                                            resultColor.y *= diff.Normalized().y;
+                                            resultColor.z *= diff.Normalized().z;
+
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (normal.Dot(intersectionToPointLight.Normalized()) > 0)
+                            {
+                                resultColor += diff;
+
+//                                System.Console.WriteLine("diff:" + diff);
+                            }
+
 
                             Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.Dot(normal)) * (normal);
 
                             reflectedVector = reflectedVector.Normalized();
-                            if (normal.Dot(intersectionToPointLight.Normalized()) > 0) // haack
+                            if (normal.Dot(reflectedVector) > 0) // haack
 
                                 resultColor += new Vector3(1,1,1) * speculrCoeff *
                                 (float)Math.Pow(
                                     reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
                                     , specular); // "*2" - ugly hack!
 
+                            Vector3 reflectedVector2 = intersectionToPointLight2 - 2 * (intersectionToPointLight2.Dot(normal)) * (normal);
+
+                            reflectedVector2 = reflectedVector2.Normalized();
+                            if (normal.Dot(reflectedVector2) > 0) // haack
+
+                                resultColor += new Vector3(1, 1, 1) * speculrCoeff *
+                                (float)Math.Pow(
+                                    reflectedVector2.Dot(intersection_minus_cam_pos.Normalized())
+                                    , specular); // "*2" - ugly hack!
                             if (resultColor.x < 0)
                                 resultColor.x = 0;
-                            if (resultColor.y < 0)
+                            if (resultColor.y <0)
                                 resultColor.y = 0;
                             if (resultColor.z < 0)
                                 resultColor.z = 0;
-                            //if (resultColor.x > 1)
-                            //    resultColor.x = 1;
-                            //if (resultColor.y > 1)
-                            //    resultColor.y = 1;
-                            //if (resultColor.z > 1)
-                            //    resultColor.z = 1;
+
+                            if (resultColor.x >1)
+                                resultColor.x = 1;
+                            if (resultColor.y >1)
+                                resultColor.y = 1;
+                            if (resultColor.z >1)
+                                resultColor.z =1;
                             bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2,
                                 Color.FromArgb(
                                     (int)(resultColor.x * 255.0f),
@@ -320,6 +389,7 @@ namespace Raytracer
         public Vector3 center;
         public float radius;
 
+        public bool isReflective;
         public Vector3 color;
         public Vector3 CalculateNormal(Vector3 point)
         {
@@ -339,7 +409,7 @@ namespace Raytracer
 
             float delta = b * b - 4 * a * c;
 
-            if (delta == 0)
+            if (delta==0)
             {
                 float t = -b / (2 * a);
                 return new Vector3(x0 + t * xv, y0 + t * yv, z0 + t * zv);
@@ -351,16 +421,21 @@ namespace Raytracer
                 float t1 = (-b + sqrt_delta) / (2 * a);
                 float t0 = (-b - sqrt_delta) / (2 * a);
 
-                if(t0<0) // "smaller positive" (the same effect :| )
+                if (t0 <= 0) // "smaller positive" (the same effect :| )
                 {
-                    if (t1 < 0)
+                    if (t1 <= 0)
                         return null;
                     else
                         return new Vector3(x0 + t1 * xv, y0 + t1 * yv, z0 + t1 * zv);
 
-                }else
-
-                    return new Vector3(x0 + t0 * xv, y0 + t0 * yv, z0 + t0 * zv);
+                }
+                else
+                {
+                    if (t1 > 0)
+                        return new Vector3(x0 + Math.Min(t1, t0) * xv, y0 + Math.Min(t1, t0) * yv, z0 + Math.Min(t1, t0) * zv);
+                    else
+                        return new Vector3(x0 + t0 * xv, y0 + t0 * yv, z0 + t0 * zv);
+                }
             }
             else //delta <0
                 return null;
