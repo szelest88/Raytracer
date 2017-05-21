@@ -313,7 +313,7 @@ namespace Raytracer
         }
     }
 
-    public class Vector3
+    public class Vector3 // TODO: (by Marek!): use struct
     {
         public float x, y, z;
         public Vector3(float x, float y, float z)
