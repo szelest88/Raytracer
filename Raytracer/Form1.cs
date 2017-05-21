@@ -25,9 +25,9 @@ namespace Raytracer
             InitializeComponent();
             s3 = new Sphere()
             {
-                center = new Vector3(0.2f, 0.1f, 0.7f),
-                radius = 0.06f,
-                color = new Vector3(1.0f, 0.0f, 0.2f)
+                center = new Vector3(-0.3f, 0.02f, 1.1f),
+                radius = 0.09f,
+                color = new Vector3(0.9f, 0.0f, 0.04f)
             };
         }
 
@@ -48,9 +48,7 @@ namespace Raytracer
                 color = new Vector3(0.0f, 1.0f, 0.2f)
             };
 
-            s3.center.x-=0.2f;
-            s3.center.y -= 0.02f;
-            s3.center.z += 0.2f;
+
             s1.isReflective = true;
             s2.isReflective = false;
             s3.isReflective = false;
@@ -61,7 +59,7 @@ namespace Raytracer
             spheres.Add(s3);
             spheres.Add(s2);
 
-            PointLight pointLight = new PointLight(new Vector3(1.8f, -1.8f, +0.2f), new Vector3(1, 1, 1));
+            PointLight pointLight = new PointLight(new Vector3(1.8f, -1.8f, +10.2f), new Vector3(1, 1, 1));
             PointLight pointLight2 = new PointLight(new Vector3(1.3f, 3.8f, 40.2f), new Vector3(1, 1, 1));
 
             Camera cam = new Camera(new Vector3(0, 0, 0), new Vector3(0, 0, 1), new Vector3(0, 1, 0), resolution, resolution);
@@ -94,9 +92,11 @@ namespace Raytracer
                                 Vector3 intersectionToPointLight2 = (intersection - pointLight2.position).Normalized();
 
                                 Vector3 diff = new Vector3(0, 0, 0);
+
+                                speculrCoeff = 1f;
                                 if (!sphere.isReflective)
                                 {
-                                    diff = sphere.color * diffuseCoeff
+                                    diff = 0.5f * sphere.color * diffuseCoeff
                                        *
                                        (normal.Dot(intersectionToPointLight.Normalized())); // diffuse, and this causes the sphere to turn green?
                                                                                             //   System.Console.WriteLine("" + normal.Dot(intersectionToPointLight.Normalized()));
@@ -108,7 +108,6 @@ namespace Raytracer
                                 }
                                 else
                                 {
-                                    speculrCoeff = 1f;
                                     Ray r2 = new Ray(intersection,
                                         intersection_minus_cam_pos.Normalized() - 2 * (intersection_minus_cam_pos.Normalized().Dot(normal)) * (normal)
                                         );
@@ -120,15 +119,14 @@ namespace Raytracer
                                             if (inters2 != null)
                                             {
 
-                                                diff = sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight.position).Normalized()));
-                                                resultColor.x *= diff.Normalized().x;
-                                                resultColor.y *= diff.Normalized().y;
-                                                resultColor.z *= diff.Normalized().z;
-                                                diff -= 0.5f * sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight2.position).Normalized()));
-                                                resultColor.x *= diff.Normalized().x;
-                                                resultColor.y *= diff.Normalized().y;
-                                                resultColor.z *= diff.Normalized().z;
-
+                                                diff = 0.5f * sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight.position).Normalized()));
+                                                resultColor.x = diff.Normalized().x;
+                                                resultColor.y = diff.Normalized().y;
+                                                resultColor.z = diff.Normalized().z;
+                                                diff = 0.5f * sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight2.position).Normalized()));
+                                                resultColor.x += diff.Normalized().x;
+                                                resultColor.y += diff.Normalized().y;
+                                                resultColor.z += diff.Normalized().z;
                                             }
                                         }
                                     }
@@ -180,12 +178,14 @@ namespace Raytracer
                                         (int)(resultColor.y * 255.0f),
                                         (int)(resultColor.z * 255.0f)
                                     ));
-                            }else
+                            }
+                            else
                             {
                                 nearestIntersection = intersection;
                             }
                         }
                     }
+                    
                     
                 }
 
