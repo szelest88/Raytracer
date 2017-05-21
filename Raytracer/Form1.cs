@@ -57,8 +57,9 @@ namespace Raytracer
 
             List<Sphere> spheres = new List<Sphere>();
            spheres.Add(s1);
-            spheres.Add(s2);
+
             spheres.Add(s3);
+            spheres.Add(s2);
 
             PointLight pointLight = new PointLight(new Vector3(1.8f, -1.8f, +0.2f), new Vector3(1, 1, 1));
             PointLight pointLight2 = new PointLight(new Vector3(1.3f, 3.8f, 40.2f), new Vector3(1, 1, 1));
@@ -73,114 +74,118 @@ namespace Raytracer
                     Vector3 targetPoint = cam.GetPointFromCenter(
                         2f / (float)(cam.xRes) * (float)i,
                         2f / (float)(cam.yRes) * (float)j);
-
+                    Vector3 nearestIntersection= new Vector3(float.PositiveInfinity,float.PositiveInfinity, float.PositiveInfinity);
                     Ray r = new Ray(cam.position, (targetPoint - cam.position).Normalized());
                     foreach (Sphere sphere in spheres)
                     {
                         Vector3 intersection = sphere.Intersects(r);
                         if (intersection != null)
                         {
-
-                            Vector3 normal = s1.CalculateNormal(intersection);
-                            Vector3 resultColor  = new Vector3(1, 1, 1);
-                            Vector3 intersection_minus_cam_pos = intersection - cam.position;
-
-                            float ambientCoeff = 0.2f; float diffuseCoeff = 0.2f; float speculrCoeff = 0.8f;
-
-                            resultColor *= ambientCoeff; // initialized with 1,1,1 => ambient
-                            Vector3 intersectionToPointLight = (intersection - pointLight.position).Normalized();
-                            Vector3 intersectionToPointLight2 = (intersection - pointLight2.position).Normalized();
-
-                            Vector3 diff = new Vector3(0, 0, 0);
-                            if (!sphere.isReflective)
+                            if ((intersection - cam.position).Length() < nearestIntersection.Length())
                             {
-                                diff = sphere.color * diffuseCoeff
-                                   *
-                                   (normal.Dot(intersectionToPointLight.Normalized())); // diffuse, and this causes the sphere to turn green?
-                                                                                        //   System.Console.WriteLine("" + normal.Dot(intersectionToPointLight.Normalized()));
-                                                                                        // specular:
-                                diff+=0.5f*sphere.color* diffuseCoeff
-                                   *
-                                   (normal.Dot(intersectionToPointLight2.Normalized())); // diffuse, and this causes the sphere to turn green?
-                                                                                        //   System.Cons
-                            }
-                            else
-                            {
-                                speculrCoeff = 1f;
-                                Ray r2 = new Ray(intersection,
-                                    intersection_minus_cam_pos.Normalized() - 2 * (intersection_minus_cam_pos.Normalized().Dot(normal)) * (normal)
-                                    );
-                                foreach(Sphere sphere2 in spheres)
+                                Vector3 normal = s1.CalculateNormal(intersection);
+                                Vector3 resultColor = new Vector3(1, 1, 1);
+                                Vector3 intersection_minus_cam_pos = intersection - cam.position;
+
+                                float ambientCoeff = 0.2f; float diffuseCoeff = 0.2f; float speculrCoeff = 0.8f;
+
+                                resultColor *= ambientCoeff; // initialized with 1,1,1 => ambient
+                                Vector3 intersectionToPointLight = (intersection - pointLight.position).Normalized();
+                                Vector3 intersectionToPointLight2 = (intersection - pointLight2.position).Normalized();
+
+                                Vector3 diff = new Vector3(0, 0, 0);
+                                if (!sphere.isReflective)
                                 {
-                                    if (sphere2.center != sphere.center)
+                                    diff = sphere.color * diffuseCoeff
+                                       *
+                                       (normal.Dot(intersectionToPointLight.Normalized())); // diffuse, and this causes the sphere to turn green?
+                                                                                            //   System.Console.WriteLine("" + normal.Dot(intersectionToPointLight.Normalized()));
+                                                                                            // specular:
+                                    diff += 0.5f * sphere.color * diffuseCoeff
+                                       *
+                                       (normal.Dot(intersectionToPointLight2.Normalized())); // diffuse, and this causes the sphere to turn green?
+                                                                                             //   System.Cons
+                                }
+                                else
+                                {
+                                    speculrCoeff = 1f;
+                                    Ray r2 = new Ray(intersection,
+                                        intersection_minus_cam_pos.Normalized() - 2 * (intersection_minus_cam_pos.Normalized().Dot(normal)) * (normal)
+                                        );
+                                    foreach (Sphere sphere2 in spheres)
                                     {
-                                        Vector3 inters2 = sphere2.Intersects(r2);
-                                        if (inters2 != null)
+                                        if (sphere2.center != sphere.center)
                                         {
+                                            Vector3 inters2 = sphere2.Intersects(r2);
+                                            if (inters2 != null)
+                                            {
 
-                                            diff = sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight.position).Normalized()));
-                                            resultColor.x *= diff.Normalized().x;
-                                            resultColor.y *= diff.Normalized().y;
-                                            resultColor.z *= diff.Normalized().z;
-                                            diff -=0.5f* sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight2.position).Normalized()));
-                                            resultColor.x *= diff.Normalized().x;
-                                            resultColor.y *= diff.Normalized().y;
-                                            resultColor.z *= diff.Normalized().z;
+                                                diff = sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight.position).Normalized()));
+                                                resultColor.x *= diff.Normalized().x;
+                                                resultColor.y *= diff.Normalized().y;
+                                                resultColor.z *= diff.Normalized().z;
+                                                diff -= 0.5f * sphere2.color * (s2.CalculateNormal(inters2).Dot((inters2 - pointLight2.position).Normalized()));
+                                                resultColor.x *= diff.Normalized().x;
+                                                resultColor.y *= diff.Normalized().y;
+                                                resultColor.z *= diff.Normalized().z;
 
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if (normal.Dot(intersectionToPointLight.Normalized()) > 0)
+                                if (normal.Dot(intersectionToPointLight.Normalized()) > 0)
+                                {
+                                    resultColor += diff;
+
+                                    //                                System.Console.WriteLine("diff:" + diff);
+                                }
+
+
+                                Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.Dot(normal)) * (normal);
+
+                                reflectedVector = reflectedVector.Normalized();
+                                if (normal.Dot(reflectedVector) > 0) // haack
+
+                                    resultColor += new Vector3(1, 1, 1) * speculrCoeff *
+                                    (float)Math.Pow(
+                                        reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
+                                        , specular); // "*2" - ugly hack!
+
+                                Vector3 reflectedVector2 = intersectionToPointLight2 - 2 * (intersectionToPointLight2.Dot(normal)) * (normal);
+
+                                reflectedVector2 = reflectedVector2.Normalized();
+                                if (normal.Dot(reflectedVector2) > 0) // haack
+
+                                    resultColor += new Vector3(1, 1, 1) * speculrCoeff *
+                                    (float)Math.Pow(
+                                        reflectedVector2.Dot(intersection_minus_cam_pos.Normalized())
+                                        , specular); // "*2" - ugly hack!
+                                if (resultColor.x < 0)
+                                    resultColor.x = 0;
+                                if (resultColor.y < 0)
+                                    resultColor.y = 0;
+                                if (resultColor.z < 0)
+                                    resultColor.z = 0;
+
+                                if (resultColor.x > 1)
+                                    resultColor.x = 1;
+                                if (resultColor.y > 1)
+                                    resultColor.y = 1;
+                                if (resultColor.z > 1)
+                                    resultColor.z = 1;
+                                bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2,
+                                    Color.FromArgb(
+                                        (int)(resultColor.x * 255.0f),
+                                        (int)(resultColor.y * 255.0f),
+                                        (int)(resultColor.z * 255.0f)
+                                    ));
+                            }else
                             {
-                                resultColor += diff;
-
-//                                System.Console.WriteLine("diff:" + diff);
+                                nearestIntersection = intersection;
                             }
-
-
-                            Vector3 reflectedVector = intersectionToPointLight - 2 * (intersectionToPointLight.Dot(normal)) * (normal);
-
-                            reflectedVector = reflectedVector.Normalized();
-                            if (normal.Dot(reflectedVector) > 0) // haack
-
-                                resultColor += new Vector3(1,1,1) * speculrCoeff *
-                                (float)Math.Pow(
-                                    reflectedVector.Dot(intersection_minus_cam_pos.Normalized())
-                                    , specular); // "*2" - ugly hack!
-
-                            Vector3 reflectedVector2 = intersectionToPointLight2 - 2 * (intersectionToPointLight2.Dot(normal)) * (normal);
-
-                            reflectedVector2 = reflectedVector2.Normalized();
-                            if (normal.Dot(reflectedVector2) > 0) // haack
-
-                                resultColor += new Vector3(1, 1, 1) * speculrCoeff *
-                                (float)Math.Pow(
-                                    reflectedVector2.Dot(intersection_minus_cam_pos.Normalized())
-                                    , specular); // "*2" - ugly hack!
-                            if (resultColor.x < 0)
-                                resultColor.x = 0;
-                            if (resultColor.y <0)
-                                resultColor.y = 0;
-                            if (resultColor.z < 0)
-                                resultColor.z = 0;
-
-                            if (resultColor.x >1)
-                                resultColor.x = 1;
-                            if (resultColor.y >1)
-                                resultColor.y = 1;
-                            if (resultColor.z >1)
-                                resultColor.z =1;
-                            bmp.SetPixel(i + cam.xRes / 2, j + cam.yRes / 2,
-                                Color.FromArgb(
-                                    (int)(resultColor.x * 255.0f),
-                                    (int)(resultColor.y * 255.0f),
-                                    (int)(resultColor.z * 255.0f)
-                                ));
                         }
                     }
-
                     
                 }
 
